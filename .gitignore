@@ -1,0 +1,6 @@
+models/
+.venv/
+__pycache__/
+LlmClient/bin/
+LlmClient/obj/
+*.csv

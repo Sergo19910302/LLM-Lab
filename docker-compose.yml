@@ -1,0 +1,12 @@
+services:
+  llm:
+    build: .
+    image: llm-server:latest
+    container_name: llm
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/app/models:ro
+    environment:
+      - USE_MMAP=0
+    restart: unless-stopped
