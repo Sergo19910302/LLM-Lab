@@ -71,6 +71,22 @@ Hardware: laptop, Intel Core i7-1165G7 (4 cores / 8 threads), Windows 11, CPU on
 | Fairness (FIFO) | PASS | PASS |
 | Soak, 30 min | **PASS**: 1148 requests, 0 errors, memory stable (477–567 MB), no degradation | not run yet |
 
+
+### Model quality (eval)
+
+`dotnet run -- eval`: 15 questions (13 reliability + 2 control), keyword-based check, `temperature = 0`.
+
+| Version | Score | Notes |
+|---|---|---|
+| Qwen2.5-0.5B, no RAG | **10/15 (67%)** | Good at acronyms, weak at concepts |
+
+Remaining failures are real model errors: HALT (hallucination), life-data distribution (Gamma instead of Weibull),
+constant failure rate (Gamma instead of Exponential), availability formula, bathtub curve phases (hallucination).
+
+Measurement fixes made along the way:
+- a correct answer was rejected because of strict keywords → added "or" keys (`wear|increasing`);
+- results changed between runs (flaky) → evals run with `temperature = 0`.
+
 ### Scaling experiment
 
 Two model instances on the same CPU (`N_WORKERS = 2`) made things **worse**: 6.0 s instead of 5.5 s. Each instance ran at half speed (~23 tokens/s), so the total throughput stayed at ~46 tokens/s. On CPU, generation is limited by memory bandwidth. Real gains need batching, a GPU, or more machines.
