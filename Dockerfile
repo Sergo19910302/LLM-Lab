@@ -9,7 +9,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt \
     --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
 
-COPY server.py .
+COPY server.py rag.py ./
 
 ENV MODEL_PATH=/app/models/qwen2.5-0.5b-instruct-q4_k_m.gguf
 EXPOSE 8000

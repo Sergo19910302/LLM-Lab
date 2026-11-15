@@ -14,7 +14,7 @@ switch (mode)
     case "basic":    await Basic(); break;
     case "fairness": await Fairness(8, 50); break;
     case "soak":     await Soak(args.Length > 1 ? int.Parse(args[1]) : 30); break;
-    case "eval":     await Eval(); break;
+    case "eval":     await Eval(args.Length > 1 && args[1] == "rag"); break;
     default: Console.WriteLine("Modes: basic | fairness | soak [minutes]"); break;
 }
 
@@ -23,9 +23,9 @@ switch (mode)
 static extern uint SetThreadExecutionState(uint flags);
 
 // ---------- shared call ----------
-async Task<GenResp> Generate(string prompt, int maxTokens = 64, double temperature = 0.2)
+async Task<GenResp> Generate(string prompt, int maxTokens = 64, double temperature = 0.2, bool useRag = false)
 {
-    var resp = await http.PostAsJsonAsync("/generate", new { prompt, max_tokens = maxTokens, temperature });
+    var resp = await http.PostAsJsonAsync("/generate", new { prompt, max_tokens = maxTokens, temperature, use_rag = useRag });
     resp.EnsureSuccessStatusCode();
     return (await resp.Content.ReadFromJsonAsync<GenResp>())!;
 }
@@ -142,24 +142,32 @@ async Task Soak(int minutes)
 }
 
 // ---------- eval ----------
-async Task Eval()
+async Task Eval(bool useRag)
 {
     var cases = System.Text.Json.JsonSerializer.Deserialize<EvalCase[]>(File.ReadAllText("eval_set.json"))!;
     int pass = 0;
-    Console.WriteLine($"--- Eval: {cases.Length} questions ---");
+    Console.WriteLine($"--- Eval: {cases.Length} questions | RAG: {(useRag ? "on" : "off")} ---");
     foreach (var c in cases)
     {
-        var r = await Generate(c.q, 64, 0);
+        var r = await Generate(c.q, 64, 0, useRag);
         var text = r.text.ToLowerInvariant();
         bool ok = c.must.All(k => k.Split('|').Any(alt => text.Contains(alt)));
         if (ok) pass++;
         Console.WriteLine($"{(ok ? "PASS" : "FAIL")} | {c.q}");
-        if (!ok) Console.WriteLine($"       expected: {string.Join(", ", c.must)}\n       got: {r.text.Replace("\n", " ")}");
+        if (!ok)
+        {
+            Console.WriteLine($"       expected: {string.Join(", ", c.must)}");
+            Console.WriteLine($"       got: {r.text.Replace("\n", " ")}");
+            if (r.sources is { Length: > 0 })
+                Console.WriteLine($"       sources: {string.Join(", ", r.sources.Select(s => $"{s.title} ({s.score})"))}");
+        }
     }
     Console.WriteLine($"\nScore: {pass}/{cases.Length} ({100.0 * pass / cases.Length:F0}%)");
 }
 
 record GenResp(string text, double latency_s, double queue_s, double infer_s, int tokens,
-               double tokens_per_s, string finish_reason, int arrive_no, int start_no);
+               double tokens_per_s, string finish_reason, int arrive_no, int start_no,
+               Source[]? sources = null);
+record Source(string title, double score);
 record HealthResp(string status, int pid, int workers);
 record EvalCase(string q, string[] must);
