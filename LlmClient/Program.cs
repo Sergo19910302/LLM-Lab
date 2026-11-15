@@ -14,6 +14,7 @@ switch (mode)
     case "basic":    await Basic(); break;
     case "fairness": await Fairness(8, 50); break;
     case "soak":     await Soak(args.Length > 1 ? int.Parse(args[1]) : 30); break;
+    case "eval":     await Eval(); break;
     default: Console.WriteLine("Modes: basic | fairness | soak [minutes]"); break;
 }
 
@@ -22,9 +23,9 @@ switch (mode)
 static extern uint SetThreadExecutionState(uint flags);
 
 // ---------- shared call ----------
-async Task<GenResp> Generate(string prompt, int maxTokens = 64)
+async Task<GenResp> Generate(string prompt, int maxTokens = 64, double temperature = 0.2)
 {
-    var resp = await http.PostAsJsonAsync("/generate", new { prompt, max_tokens = maxTokens });
+    var resp = await http.PostAsJsonAsync("/generate", new { prompt, max_tokens = maxTokens, temperature });
     resp.EnsureSuccessStatusCode();
     return (await resp.Content.ReadFromJsonAsync<GenResp>())!;
 }
@@ -140,6 +141,25 @@ async Task Soak(int minutes)
     Console.WriteLine("Done. Results saved to soak.csv");
 }
 
+// ---------- eval ----------
+async Task Eval()
+{
+    var cases = System.Text.Json.JsonSerializer.Deserialize<EvalCase[]>(File.ReadAllText("eval_set.json"))!;
+    int pass = 0;
+    Console.WriteLine($"--- Eval: {cases.Length} questions ---");
+    foreach (var c in cases)
+    {
+        var r = await Generate(c.q, 64, 0);
+        var text = r.text.ToLowerInvariant();
+        bool ok = c.must.All(k => k.Split('|').Any(alt => text.Contains(alt)));
+        if (ok) pass++;
+        Console.WriteLine($"{(ok ? "PASS" : "FAIL")} | {c.q}");
+        if (!ok) Console.WriteLine($"       expected: {string.Join(", ", c.must)}\n       got: {r.text.Replace("\n", " ")}");
+    }
+    Console.WriteLine($"\nScore: {pass}/{cases.Length} ({100.0 * pass / cases.Length:F0}%)");
+}
+
 record GenResp(string text, double latency_s, double queue_s, double infer_s, int tokens,
                double tokens_per_s, string finish_reason, int arrive_no, int start_no);
 record HealthResp(string status, int pid, int workers);
+record EvalCase(string q, string[] must);

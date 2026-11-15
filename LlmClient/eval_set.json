@@ -1,0 +1,77 @@
+[
+  {
+    "q": "What does MTBF stand for? Answer briefly.",
+    "answer": "Mean Time Between Failures.",
+    "must": ["mean time between failures"]
+  },
+  {
+    "q": "What does MTTF stand for? Answer briefly.",
+    "answer": "Mean Time To Failure.",
+    "must": ["mean time to failure"]
+  },
+  {
+    "q": "What does MTTR stand for in repairable-system availability? Answer briefly.",
+    "answer": "Mean Time To Repair.",
+    "must": ["mean time to repair"]
+  },
+  {
+    "q": "What does FMEA stand for? Answer briefly.",
+    "answer": "Failure Mode and Effects Analysis.",
+    "must": ["failure mode", "effects", "analysis"]
+  },
+  {
+    "q": "What does HALT stand for in reliability testing? Answer briefly.",
+    "answer": "Highly Accelerated Life Test.",
+    "must": ["highly accelerated life", "test"]
+  },
+  {
+    "q": "What does RCA stand for in quality engineering? Answer briefly.",
+    "answer": "Root Cause Analysis.",
+    "must": ["root cause analysis"]
+  },
+  {
+    "q": "What does DOE stand for in quality engineering? Answer briefly.",
+    "answer": "Design of Experiments.",
+    "must": ["design of experiments"]
+  },
+  {
+    "q": "Which distribution is commonly used in reliability for life data? One word.",
+    "answer": "Weibull.",
+    "must": ["weibull"]
+  },
+  {
+    "q": "If the failure rate is constant, which distribution describes time to failure? One word.",
+    "answer": "Exponential.",
+    "must": ["exponential"]
+  },
+  {
+    "q": "Inherent availability = MTBF / (MTBF + X). What is X? Answer with one abbreviation.",
+    "answer": "MTTR",
+    "must": ["mttr"]
+  },
+  {
+    "q": "A Weibull shape parameter greater than 1 indicates what type of failures? Answer briefly.",
+    "answer": "Wear-out failures, with an increasing failure rate.",
+    "must": ["wear|increasing"]
+  },
+  {
+    "q": "Name the two later phases of the bathtub curve. Answer briefly.",
+    "answer": "Useful life with random failures, followed by wear-out.",
+    "must": ["random", "wear"]
+  },
+  {
+    "q": "Which accelerating stress does the Arrhenius model describe in reliability testing? One word.",
+    "answer": "Temperature.",
+    "must": ["temperature"]
+  },
+  {
+    "q": "What is the capital of France? One word.",
+    "answer": "Paris.",
+    "must": ["paris"]
+  },
+  {
+    "q": "What is 12 * 12? Answer with a number.",
+    "answer": "144",
+    "must": ["144"]
+  }
+]

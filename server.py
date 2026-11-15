@@ -8,9 +8,10 @@ N_WORKERS = 1
 CORES = max(1, (os.cpu_count() or 2) // 2)
 THREADS = max(1, CORES // N_WORKERS)
 USE_MMAP = os.getenv("USE_MMAP", "1") == "1"   # 0 = load whole model into RAM
+
 pool = queue.Queue()
 for _ in range(N_WORKERS):
-        pool.put(Llama(model_path=MODEL, n_ctx=2048,
+    pool.put(Llama(model_path=MODEL, n_ctx=2048,
                    n_threads=THREADS, use_mmap=USE_MMAP, verbose=False))
 
 arrive_counter = itertools.count(1)   # номерок при входе
@@ -21,11 +22,13 @@ app = FastAPI()
 class Req(BaseModel):
     prompt: str
     max_tokens: int = 128
+    temperature: float = 0.2
 
 @app.get("/health")
 def health():
     return {"status": "ok", "pid": os.getpid(), "workers": N_WORKERS,
-            "threads_per_worker": THREADS, "free_workers": pool.qsize(),"use_mmap": USE_MMAP,}
+            "threads_per_worker": THREADS, "free_workers": pool.qsize(),
+            "use_mmap": USE_MMAP}
 
 @app.post("/generate")
 def generate(r: Req):
@@ -39,7 +42,8 @@ def generate(r: Req):
         t_start = time.perf_counter()
         out = llm.create_chat_completion(
             messages=[{"role": "user", "content": r.prompt}],
-            max_tokens=r.max_tokens)
+            max_tokens=r.max_tokens,
+            temperature=r.temperature)
         t_end = time.perf_counter()
     finally:
         pool.put(llm)
